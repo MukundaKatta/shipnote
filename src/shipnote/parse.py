@@ -111,16 +111,25 @@ def parse_commits(text: str) -> list[Commit]:
 
 
 def group_commits(commits: list[Commit]) -> dict[str, list[Commit]]:
-    """Bucket commits by type, in SECTION_ORDER, omitting empty buckets."""
+    """Bucket commits by type, in SECTION_ORDER, omitting empty buckets.
+
+    Known types appear first, in :data:`SECTION_ORDER`. Any type outside that
+    order (e.g. a non-standard ``wip:``) still gets its own bucket — in
+    first-seen order — so no commit is ever dropped.
+    """
     grouped: dict[str, list[Commit]] = {}
     for section in SECTION_ORDER:
         bucket = [c for c in commits if c.type == section]
         if bucket:
             grouped[section] = bucket
-    # types outside the known order still get a bucket under their own name
+    # Types outside the known order still get a bucket under their own name.
+    # Collect *every* matching commit, not just the first one, so nothing is
+    # lost (the "other" catch-all already covers non-conventional lines, but a
+    # recognized-but-unordered type like "wip" lands here).
     for c in commits:
-        if c.type not in grouped and c.type not in SECTION_ORDER:
-            grouped.setdefault(c.type, []).append(c)
+        if c.type in SECTION_ORDER:
+            continue
+        grouped.setdefault(c.type, []).append(c)
     return grouped
 
 
