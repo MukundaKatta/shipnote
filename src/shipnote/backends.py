@@ -22,7 +22,9 @@ from .parse import Commit, TYPE_TITLES, count_label
 class Backend(Protocol):
     name: str
 
-    def summarize(self, grouped: dict[str, list[Commit]], *, breaking: list[Commit]) -> str: ...
+    def summarize(
+        self, grouped: dict[str, list[Commit]], *, breaking: list[Commit]
+    ) -> str: ...
 
 
 class StubBackend:
@@ -34,7 +36,9 @@ class StubBackend:
 
     name = "stub"
 
-    def summarize(self, grouped: dict[str, list[Commit]], *, breaking: list[Commit]) -> str:
+    def summarize(
+        self, grouped: dict[str, list[Commit]], *, breaking: list[Commit]
+    ) -> str:
         parts: list[str] = []
         if breaking:
             n = len(breaking)
@@ -47,8 +51,11 @@ class StubBackend:
 
 
 def _build_prompt(grouped: dict[str, list[Commit]], breaking: list[Commit]) -> str:
-    lines = ["Summarize this release in 2-3 short sentences for end users.",
-             "Lead with the most important change. Plain language, no jargon.", ""]
+    lines = [
+        "Summarize this release in 2-3 short sentences for end users.",
+        "Lead with the most important change. Plain language, no jargon.",
+        "",
+    ]
     if breaking:
         lines.append("BREAKING CHANGES:")
         lines += [f"- {c.subject}" for c in breaking]
@@ -74,7 +81,9 @@ class GeminiBackend:
         self._client = genai.Client(api_key=api_key or os.environ["GEMINI_API_KEY"])
         self._model = model
 
-    def summarize(self, grouped: dict[str, list[Commit]], *, breaking: list[Commit]) -> str:
+    def summarize(
+        self, grouped: dict[str, list[Commit]], *, breaking: list[Commit]
+    ) -> str:
         prompt = _build_prompt(grouped, breaking)
         resp = self._client.models.generate_content(model=self._model, contents=prompt)
         return (resp.text or "").strip()
@@ -91,14 +100,18 @@ class AnthropicBackend:
         self._client = anthropic.Anthropic(api_key=api_key)
         self._model = model
 
-    def summarize(self, grouped: dict[str, list[Commit]], *, breaking: list[Commit]) -> str:
+    def summarize(
+        self, grouped: dict[str, list[Commit]], *, breaking: list[Commit]
+    ) -> str:
         prompt = _build_prompt(grouped, breaking)
         msg = self._client.messages.create(
             model=self._model,
             max_tokens=512,
             messages=[{"role": "user", "content": prompt}],
         )
-        return "".join(block.text for block in msg.content if block.type == "text").strip()
+        return "".join(
+            block.text for block in msg.content if block.type == "text"
+        ).strip()
 
 
 class OllamaBackend:
@@ -110,7 +123,9 @@ class OllamaBackend:
         self._model = model
         self._host = host.rstrip("/")
 
-    def summarize(self, grouped: dict[str, list[Commit]], *, breaking: list[Commit]) -> str:
+    def summarize(
+        self, grouped: dict[str, list[Commit]], *, breaking: list[Commit]
+    ) -> str:
         import httpx  # lazy import
 
         prompt = _build_prompt(grouped, breaking)

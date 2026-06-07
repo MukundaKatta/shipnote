@@ -70,7 +70,9 @@ class Shipnote:
 
     backend: Backend = field(default_factory=StubBackend)
 
-    def generate(self, commits_text: str, *, version: str | None = None) -> ReleaseNotes:
+    def generate(
+        self, commits_text: str, *, version: str | None = None
+    ) -> ReleaseNotes:
         commits = parse_commits(commits_text)
         sections = group_commits(commits)
         breaking = [c for c in commits if c.breaking]

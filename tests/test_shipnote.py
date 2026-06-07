@@ -64,6 +64,19 @@ def test_group_buckets_by_type():
     assert len(grouped["other"]) == 1
 
 
+def test_group_keeps_all_commits_of_unknown_type():
+    # Types outside SECTION_ORDER must all be bucketed — no history dropped.
+    grouped = group_commits(parse_commits("wip: a\nwip: b\nwip: c"))
+    assert len(grouped["wip"]) == 3
+    assert sum(len(v) for v in grouped.values()) == 3
+
+
+def test_group_loses_no_commits():
+    commits = parse_commits(SAMPLE)
+    grouped = group_commits(commits)
+    assert sum(len(v) for v in grouped.values()) == len(commits)
+
+
 def test_bump_major_on_breaking():
     assert suggest_bump(parse_commits(SAMPLE)) == "major"
 
@@ -119,5 +132,12 @@ def test_generate_is_deterministic():
 
 def test_to_dict_keys():
     d = Shipnote().generate(SAMPLE, version="v2.0.0").to_dict()
-    for key in ("version", "version_bump", "commit_count", "breaking", "sections", "backend"):
+    for key in (
+        "version",
+        "version_bump",
+        "commit_count",
+        "breaking",
+        "sections",
+        "backend",
+    ):
         assert key in d

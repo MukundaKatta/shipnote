@@ -36,8 +36,18 @@ TYPE_TITLES: dict[str, str] = {
 
 # Order sections appear in the changelog.
 SECTION_ORDER: tuple[str, ...] = (
-    "feat", "fix", "perf", "refactor", "docs",
-    "build", "ci", "test", "style", "chore", "revert", "other",
+    "feat",
+    "fix",
+    "perf",
+    "refactor",
+    "docs",
+    "build",
+    "ci",
+    "test",
+    "style",
+    "chore",
+    "revert",
+    "other",
 )
 
 # (singular, plural) noun for count summaries — English plurals are irregular,
@@ -119,7 +129,7 @@ def group_commits(commits: list[Commit]) -> dict[str, list[Commit]]:
             grouped[section] = bucket
     # types outside the known order still get a bucket under their own name
     for c in commits:
-        if c.type not in grouped and c.type not in SECTION_ORDER:
+        if c.type not in SECTION_ORDER:
             grouped.setdefault(c.type, []).append(c)
     return grouped
 
