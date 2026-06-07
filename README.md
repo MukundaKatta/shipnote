@@ -6,9 +6,9 @@ Conventional Commits, never drops a commit it doesn't recognize, and ships a
 keyless deterministic backend so it runs anywhere. Plug in an LLM only when you
 want prose highlights.
 
+[![CI](https://github.com/MukundaKatta/shipnote/actions/workflows/ci.yml/badge.svg)](https://github.com/MukundaKatta/shipnote/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-pytest-blueviolet.svg)](tests/)
 
 ---
 
@@ -102,14 +102,44 @@ streamlit run app.py
 
 Paste a commit log, get rendered release notes and a copy-ready markdown block.
 
+## API
+
+Everything below is importable from the top-level `shipnote` package.
+
+| Object | What it is |
+| ------ | ---------- |
+| `Shipnote(backend=StubBackend())` | The entry point. `.generate(commits_text, *, version=None)` returns a `ReleaseNotes`. |
+| `ReleaseNotes` | Result object. `.markdown()` renders the changelog; `.to_dict()` returns a JSON-friendly summary; fields: `version`, `version_bump`, `sections`, `breaking`, `highlights`, `commit_count`, `backend`. |
+| `Commit` | One parsed commit: `type`, `scope`, `breaking`, `subject`, `raw`, `hash`. |
+| `parse_commit(line)` / `parse_commits(text)` | Parse one line / a block of lines into `Commit`s. |
+| `group_commits(commits)` | Bucket commits by type, in section order, dropping nothing. |
+| `suggest_bump(commits)` | `"major"` / `"minor"` / `"patch"` implied by the commits. |
+| `Backend` | Protocol with `summarize(grouped, *, breaking) -> str`. |
+| `StubBackend` | Default, keyless, deterministic highlight writer. |
+| `GeminiBackend`, `AnthropicBackend`, `OllamaBackend` | Optional LLM backends (lazily import their SDKs). |
+
+`shipnote.gitlog.read_commits(rev_range="HEAD~20..HEAD", *, cwd=".")` shells out to
+`git log` and returns `hash subject` lines for the range.
+
+The package ships a `py.typed` marker, so type checkers see its annotations.
+
 ## Tests
+
+The suite uses only the standard library, so no test dependencies are required:
+
+```bash
+pip install -e .            # core has zero runtime deps
+python -m unittest discover -s tests
+```
+
+It also runs under `pytest` if you prefer:
 
 ```bash
 pip install -e ".[dev]"
 pytest
 ```
 
-Runs fully offline against the stub backend.
+Either way the tests run fully offline against the keyless stub backend.
 
 ## License
 
